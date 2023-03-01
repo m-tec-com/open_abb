@@ -402,6 +402,14 @@ PROC main()
                 ELSE
                     ok:=SERVER_BAD_MSG;
                 ENDIF
+            
+            CASE 90: !pause
+                paused := TRUE;
+                ok:=SERVER_OK;
+
+            CASE 91: !resume
+                paused := FALSE;
+                ok:=SERVER_OK;
 				
             CASE 98: !returns current robot info: serial number, robotware version, and robot type
                 IF nParams = 0 THEN

@@ -289,6 +289,13 @@ class Robot:
             return False
         return self.send(msg_1)
 
+
+    def pause(self):
+        return self.send("90 #")
+
+    def resume(self):
+        return self.send("91 #")
+
     def set_dio(self, value, id=0):
         '''
         A function to set a physical DIO line on the robot.
