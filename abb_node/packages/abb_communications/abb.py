@@ -13,7 +13,7 @@ import socket
 import json 
 import time
 import inspect
-from threading import Thread
+import threading
 from collections import deque
 import logging
 
@@ -24,13 +24,16 @@ class Robot:
     def __init__(self, 
                  ip          = '192.168.125.1', 
                  port_motion = 5000,
-                 port_logger = 5001):
+                 port_logger = 5001,
+                 callback = None):
 
         self.delay   = .08
+        self.callback = callback
 
         self.connect_motion((ip, port_motion))
         #log_thread = Thread(target = self.get_net, 
         #                    args   = ((ip, port_logger))).start()
+        threading.Thread(target=self.connect_logger, args=((ip, port_logger))).start()
         
         self.set_units('millimeters', 'degrees')
         self.set_tool()
@@ -47,8 +50,8 @@ class Robot:
         log.info('Connected to robot motion server at %s', str(remote))
 
     def connect_logger(self, remote, maxlen=None):
-        self.pose   = deque(maxlen=maxlen)
-        self.joints = deque(maxlen=maxlen)
+        #self.pose   = deque(maxlen=maxlen)
+        #self.joints = deque(maxlen=maxlen)
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(remote)
@@ -56,9 +59,14 @@ class Robot:
         try:
             while True:
                 data = map(float, s.recv(4096).split())
-                if   int(data[1]) == 0: 
-                    self.pose.append([data[2:5], data[5:]])
+                #if   int(data[1]) == 0: 
+                #    self.pose.append([data[2:5], data[5:]])
                 #elif int(data[1]) == 1: self.joints.append([a[2:5], a[5:]])
+                if int(data[1]) == 1:
+                    self.pose = [data[5:8], data[8:11]]
+                    self.bufferLeft = int(data[11])
+                    if self.callback != None:
+                        self.callback(self.pose, self.bufferLeft)
         finally:
             s.shutdown(socket.SHUT_RDWR)
 
@@ -225,8 +233,9 @@ class Robot:
         Appends single pose to the remote buffer
         Move will execute at current speed (which you can change between buffer_add calls)
         '''
-        msg = "30 " + self.format_pose(pose) 
-        self.send(msg)
+        msg = "30 " + self.format_pose(pose)
+        data = self.send(msg).split()
+        return int(float(data[2]))
 
     def buffer_set(self, pose_list):
         '''

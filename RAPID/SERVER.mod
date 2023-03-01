@@ -24,8 +24,8 @@ VAR num instructionCode;
 VAR num params{10};
 VAR num nParams;
 
-!PERS string ipController:= "192.168.125.1"; !robot default IP
-PERS string ipController:= "127.0.0.1"; !local IP for testing in simulation
+PERS string ipController:= "20.20.20.21"; !robot default IP
+!PERS string ipController:= "127.0.0.1"; !local IP for testing in simulation
 PERS num serverPort:= 5000;
 
 !//Motion of the robot
@@ -34,8 +34,8 @@ VAR jointtarget jointsTarget;
 VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 
 !//Buffered move variables
-CONST num MAX_BUFFER := 512;
-VAR num BUFFER_POS := 0;
+PERS CONST num MAX_BUFFER := 512;
+PERS num BUFFER_POS := 0;
 VAR robtarget bufferTargets{MAX_BUFFER};
 VAR speeddata bufferSpeeds{MAX_BUFFER};
 
@@ -336,6 +336,7 @@ PROC main()
                         bufferTargets{BUFFER_POS} := cartesianTarget;
                         bufferSpeeds{BUFFER_POS} := currentSpeed;
                     ENDIF
+                    addString := NumToStr(MAX_BUFFER - BUFFER_POS,2);
                     ok := SERVER_OK;
                 ELSE
                     ok:=SERVER_BAD_MSG;

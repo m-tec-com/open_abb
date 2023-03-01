@@ -15,6 +15,10 @@ PERS wobjdata currentWobj;
 VAR speeddata currentSpeed;
 VAR zonedata currentZone;
 
+PERS num BUFFER_POS;
+PERS CONST num MAX_BUFFER;
+
+
 !//Logger sampling rate
 !PERS num loggerWaitTime:= 0.01;  !Recommended for real controller
 PERS num loggerWaitTime:= 0.1;    !Recommended for virtual controller
@@ -69,7 +73,8 @@ PROC main()
 		data := data + NumToStr(position.rot.q1,3) + " ";
 		data := data + NumToStr(position.rot.q2,3) + " ";
 		data := data + NumToStr(position.rot.q3,3) + " ";
-		data := data + NumToStr(position.rot.q4,3); !End of string	
+		data := data + NumToStr(position.rot.q4,3) + " ";
+		data := data + NumToStr(MAX_BUFFER - BUFFER_POS); !End of string	
 		IF connected = TRUE THEN
 			SocketSend clientSocket \Str:=data;
 		ENDIF
@@ -85,7 +90,8 @@ PROC main()
 		data := data + NumToStr(joints.robax.rax_3,2) + " ";
 		data := data + NumToStr(joints.robax.rax_4,2) + " ";
 		data := data + NumToStr(joints.robax.rax_5,2) + " ";
-		data := data + NumToStr(joints.robax.rax_6,2); !End of string
+		data := data + NumToStr(joints.robax.rax_6,2) + " ";
+		data := data + NumToStr(MAX_BUFFER - BUFFER_POS); !End of string	
 		IF connected = TRUE THEN
 			SocketSend clientSocket \Str:=data;
 		ENDIF
