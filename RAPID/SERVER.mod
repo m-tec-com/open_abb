@@ -36,7 +36,7 @@ VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 !//Buffered move variables
 CONST num MAX_BUFFER := 512;
 PERS bool paused := FALSE;
-PERS num BUFFER_POS := 0;
+PERS num BUFFER_POS := 2;
 PERS robtarget bufferTargets{MAX_BUFFER};
 PERS speeddata bufferSpeeds{MAX_BUFFER};
 
