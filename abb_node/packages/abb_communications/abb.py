@@ -22,7 +22,7 @@ log.addHandler(logging.NullHandler())
     
 class Robot:
     def __init__(self, 
-                 ip          = '192.168.125.1', 
+                 ip          = '20.20.20.21', 
                  port_motion = 5000,
                  port_logger = 5001,
                  callback = None):
@@ -151,7 +151,7 @@ class Robot:
 
     def load_json_tool(self, file_obj):
         if file_obj.__class__.__name__ == 'str':
-            file_obj = open(filename, 'rb');
+            file_obj = open(filename, 'rb')
         tool = check_coordinates(json.load(file_obj))
         self.set_tool(tool)
         
@@ -322,7 +322,7 @@ class Robot:
         '''
         caller = inspect.stack()[1][3]
         log.debug('%-14s sending: %s', caller, message)
-        self.sock.send(message)
+        self.sock.send(message.encode())
         time.sleep(self.delay)
         if not wait_for_response: return
         data = self.sock.recv(4096)
