@@ -34,10 +34,11 @@ VAR jointtarget jointsTarget;
 VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 
 !//Buffered move variables
-PERS CONST num MAX_BUFFER := 512;
+CONST num MAX_BUFFER := 512;
+PERS bool paused := FALSE;
 PERS num BUFFER_POS := 0;
-VAR robtarget bufferTargets{MAX_BUFFER};
-VAR speeddata bufferSpeeds{MAX_BUFFER};
+PERS robtarget bufferTargets{MAX_BUFFER};
+PERS speeddata bufferSpeeds{MAX_BUFFER};
 
 !//External axis position variables
 VAR extjoint externalAxis;
@@ -160,8 +161,8 @@ PROC main()
     VAR jointtarget jointsPose;
     			
     !//Motion configuration
-    ConfL \Off;
-    SingArea \Wrist;
+    !ConfL \Off;
+    !SingArea \Wrist;
     moveCompleted:= TRUE;
 	
     !//Initialization of WorkObject, Tool, Speed and Zone
@@ -192,30 +193,30 @@ PROC main()
                     ok := SERVER_BAD_MSG;
                 ENDIF
 
-            CASE 1: !Cartesian Move
-                IF nParams = 7 THEN
-                    cartesianTarget :=[[params{1},params{2},params{3}],
-                                       [params{4},params{5},params{6},params{7}],
-                                       [0,0,0,0],
-                                       externalAxis];
-                    ok := SERVER_OK;
-                    moveCompleted := FALSE;
-                    MoveL cartesianTarget, currentSpeed, currentZone, currentTool \WObj:=currentWobj ;
-                    moveCompleted := TRUE;
-                ELSE
-                    ok := SERVER_BAD_MSG;
-                ENDIF	
+!            CASE 1: !Cartesian Move
+!                IF nParams = 7 THEN
+!                    cartesianTarget :=[[params{1},params{2},params{3}],
+!                                       [params{4},params{5},params{6},params{7}],
+!                                       [0,0,0,0],
+!                                       externalAxis];
+!                    ok := SERVER_OK;
+!                    moveCompleted := FALSE;
+!                    MoveL cartesianTarget, currentSpeed, currentZone, currentTool \WObj:=currentWobj ;
+!                    moveCompleted := TRUE;
+!                ELSE
+!                    ok := SERVER_BAD_MSG;
+!                ENDIF	
 				
-            CASE 2: !Joint Move
-                IF nParams = 6 THEN
-                    jointsTarget:=[[params{1},params{2},params{3},params{4},params{5},params{6}], externalAxis];
-                    ok := SERVER_OK;
-                    moveCompleted := FALSE;
-                    MoveAbsJ jointsTarget, currentSpeed, currentZone, currentTool \Wobj:=currentWobj;
-                    moveCompleted := TRUE;
-                ELSE
-                    ok :=SERVER_BAD_MSG;
-                ENDIF
+!            CASE 2: !Joint Move
+!                IF nParams = 6 THEN
+!                    jointsTarget:=[[params{1},params{2},params{3},params{4},params{5},params{6}], externalAxis];
+!                    ok := SERVER_OK;
+!                    moveCompleted := FALSE;
+!                    MoveAbsJ jointsTarget, currentSpeed, currentZone, currentTool \Wobj:=currentWobj;
+!                    moveCompleted := TRUE;
+!                ELSE
+!                    ok :=SERVER_BAD_MSG;
+!                ENDIF
 
             CASE 3: !Get Cartesian Coordinates (with current tool and workobject)
                 IF nParams = 0 THEN
@@ -358,51 +359,51 @@ PROC main()
                     ok:=SERVER_BAD_MSG;
                 ENDIF
 
-            CASE 33: !Execute moves in cartesianBuffer as linear moves
-                IF nParams = 0 THEN
-                    FOR i FROM 1 TO (BUFFER_POS) DO 
-                        MoveL bufferTargets{i}, bufferSpeeds{i}, currentZone, currentTool \WObj:=currentWobj ;
-                    ENDFOR			
-                    ok := SERVER_OK;
-                ELSE
-                    ok:=SERVER_BAD_MSG;
-                ENDIF
+!            CASE 33: !Execute moves in cartesianBuffer as linear moves
+!                IF nParams = 0 THEN
+!                    FOR i FROM 1 TO (BUFFER_POS) DO 
+!                        MoveL bufferTargets{i}, bufferSpeeds{i}, currentZone, currentTool \WObj:=currentWobj ;
+!                    ENDFOR			
+!                    ok := SERVER_OK;
+!                ELSE
+!                    ok:=SERVER_BAD_MSG;
+!                ENDIF
 
-            CASE 34: !External Axis move
-                IF nParams = 6 THEN
-                    externalAxis :=[params{1},params{2},params{3},params{4},params{5},params{6}];
-                    jointsTarget := CJointT();
-                    jointsTarget.extax := externalAxis;
-                    ok := SERVER_OK;
-                    moveCompleted := FALSE;
-                    MoveAbsJ jointsTarget, currentSpeed, currentZone, currentTool \Wobj:=currentWobj;
-                    moveCompleted := TRUE;
-                ELSE
-                    ok :=SERVER_BAD_MSG;
-                ENDIF
+!            CASE 34: !External Axis move
+!                IF nParams = 6 THEN
+!                    externalAxis :=[params{1},params{2},params{3},params{4},params{5},params{6}];
+!                    jointsTarget := CJointT();
+!                    jointsTarget.extax := externalAxis;
+!                    ok := SERVER_OK;
+!                    moveCompleted := FALSE;
+!                    MoveAbsJ jointsTarget, currentSpeed, currentZone, currentTool \Wobj:=currentWobj;
+!                    moveCompleted := TRUE;
+!                ELSE
+!                    ok :=SERVER_BAD_MSG;
+!                ENDIF
 
-            CASE 35: !Specify circPoint for circular move, and then wait on toPoint
-                IF nParams = 7 THEN
-                    circPoint :=[[params{1},params{2},params{3}],
-                                [params{4},params{5},params{6},params{7}],
-                                [0,0,0,0],
-                                externalAxis];
-                    ok := SERVER_OK;
-                ELSE
-                    ok:=SERVER_BAD_MSG;
-                ENDIF
+!            CASE 35: !Specify circPoint for circular move, and then wait on toPoint
+!                IF nParams = 7 THEN
+!                    circPoint :=[[params{1},params{2},params{3}],
+!                                [params{4},params{5},params{6},params{7}],
+!                                [0,0,0,0],
+!                                externalAxis];
+!                    ok := SERVER_OK;
+!                ELSE
+!                    ok:=SERVER_BAD_MSG;
+!                ENDIF
 
-            CASE 36: !specify toPoint, and use circPoint specified previously
-                IF nParams = 7 THEN
-                    cartesianTarget :=[[params{1},params{2},params{3}],
-                                        [params{4},params{5},params{6},params{7}],
-                                        [0,0,0,0],
-                                        externalAxis];
-                    MoveC circPoint, cartesianTarget, currentSpeed, currentZone, currentTool \WObj:=currentWobj ;
-                    ok := SERVER_OK;
-                ELSE
-                    ok:=SERVER_BAD_MSG;
-                ENDIF
+!            CASE 36: !specify toPoint, and use circPoint specified previously
+!                IF nParams = 7 THEN
+!                    cartesianTarget :=[[params{1},params{2},params{3}],
+!                                        [params{4},params{5},params{6},params{7}],
+!                                        [0,0,0,0],
+!                                        externalAxis];
+!                    MoveC circPoint, cartesianTarget, currentSpeed, currentZone, currentTool \WObj:=currentWobj ;
+!                    ok := SERVER_OK;
+!                ELSE
+!                    ok:=SERVER_BAD_MSG;
+!                ENDIF
             
             CASE 90: !pause
                 paused := TRUE;

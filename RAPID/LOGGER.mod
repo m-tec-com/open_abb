@@ -16,7 +16,7 @@ VAR speeddata currentSpeed;
 VAR zonedata currentZone;
 
 PERS num BUFFER_POS;
-PERS CONST num MAX_BUFFER;
+CONST num MAX_BUFFER := 512;
 
 
 !//Logger sampling rate
@@ -74,7 +74,7 @@ PROC main()
 		data := data + NumToStr(position.rot.q2,3) + " ";
 		data := data + NumToStr(position.rot.q3,3) + " ";
 		data := data + NumToStr(position.rot.q4,3) + " ";
-		data := data + NumToStr(MAX_BUFFER - BUFFER_POS); !End of string	
+		data := data + NumToStr(MAX_BUFFER - BUFFER_POS, 2); !End of string	
 		IF connected = TRUE THEN
 			SocketSend clientSocket \Str:=data;
 		ENDIF
@@ -91,7 +91,7 @@ PROC main()
 		data := data + NumToStr(joints.robax.rax_4,2) + " ";
 		data := data + NumToStr(joints.robax.rax_5,2) + " ";
 		data := data + NumToStr(joints.robax.rax_6,2) + " ";
-		data := data + NumToStr(MAX_BUFFER - BUFFER_POS); !End of string	
+		data := data + NumToStr(MAX_BUFFER - BUFFER_POS, 2); !End of string	
 		IF connected = TRUE THEN
 			SocketSend clientSocket \Str:=data;
 		ENDIF
