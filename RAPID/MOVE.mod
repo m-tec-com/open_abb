@@ -7,8 +7,16 @@ MODULE move
     PERS wobjdata currentWobj;   
     PERS speeddata currentSpeed;
     PERS zonedata currentZone;
+    PERS bool BUFFER_LOCKED;
+    PERS bool MOVING;
+    VAR triggdata Movement;
     
     PROC main()
+        
+        TriggIO Movement, 0 \DOp:=mMoving, 0;
+        
+        MOVING := FALSE;
+        BUFFER_LOCKED := FALSE;
         ConfL \Off;
         SingArea \Wrist;
         
@@ -18,13 +26,11 @@ MODULE move
                 movePoint;
             ENDIF
         ENDWHILE
-        !WaitTime 300;
     ENDPROC
     
     
-    PROC movePoint() 
-        TPWrite NumToStr(bufferTargets{1}.trans.x,0) + "/" + NumToStr(bufferTargets{1}.trans.y,0) + "/" + NumToStr(bufferTargets{1}.trans.z,0);
-        MoveL bufferTargets{1}, bufferSpeeds{1}, currentZone, currentTool \WObj:=currentWobj ;
+    PROC movePoint()
+        TriggL bufferTargets{1}, bufferSpeeds{1}, Movement, currentZone, currentTool \WObj:=currentWobj;
         moveBuffer;
     ENDPROC
     
@@ -35,6 +41,8 @@ MODULE move
                 bufferSpeeds{i-1} := bufferSpeeds{i};
             ENDFOR
         ENDIF
-        BUFFER_POS := BUFFER_POS - 1;
+        IF BUFFER_POS > 0 THEN
+            BUFFER_POS := BUFFER_POS - 1;
+        ENDIF
     ENDPROC
 ENDMODULE

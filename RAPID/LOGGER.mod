@@ -16,6 +16,8 @@ VAR speeddata currentSpeed;
 VAR zonedata currentZone;
 
 PERS num BUFFER_POS;
+PERS bool BUFFER_LOCKED;
+PERS bool MOVING;
 CONST num MAX_BUFFER := 512;
 
 
@@ -48,6 +50,8 @@ PROC main()
 	VAR jointtarget joints;
     VAR string sendString;
 	VAR bool connected;
+    
+    VAR string bufferLeft;
 
 	VAR string date;
 	VAR string time;
@@ -60,25 +64,28 @@ PROC main()
 	connected:=FALSE;
 	ServerCreateAndConnect ipController,loggerPort;	
 	connected:=TRUE;
+    
+    SetDO mMoving, 0;
+    
 	WHILE TRUE DO
-		!Cartesian Coordinates
+        WaitDO mMoving, 0;
+        
+		bufferLeft := NumToStr(MAX_BUFFER - BUFFER_POS, 0);
 		position := CRobT(\Tool:=currentTool \WObj:=currentWObj);
 		data := "# 0 ";
-		data := data + date + " " + time + " ";
-		data := data + NumToStr(ClkRead(timer),2) + " ";
-		data := data + NumToStr(position.trans.x,1) + " ";
+        data := data + NumToStr(position.trans.x,1) + " ";
 		data := data + NumToStr(position.trans.y,1) + " ";
         data := data + NumToStr(position.trans.z,1) + " ";
 		data := data + NumToStr(position.rot.q1,3) + " ";
 		data := data + NumToStr(position.rot.q2,3) + " ";
 		data := data + NumToStr(position.rot.q3,3) + " ";
-        !data := data + NumToStr(position.rot.q4,3); !End of string
         data := data + NumToStr(position.rot.q4,3) + " ";
-		data := data + NumToStr(MAX_BUFFER - BUFFER_POS, 0) + " "; !End of string	
+        data := data + bufferLeft + " ";
+        
 		IF connected = TRUE THEN
 			SocketSend clientSocket \Str:=data;
 		ENDIF
-		WaitTime loggerWaitTime;
+        SetDO mMoving, 1;
 	ENDWHILE
 	ERROR
 	IF ERRNO=ERR_SOCK_CLOSED THEN
@@ -95,5 +102,6 @@ PROC main()
 	connected:= TRUE;
 	RETRY;
 ENDPROC
+
 
 ENDMODULE

@@ -36,9 +36,10 @@ VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 !//Buffered move variables
 CONST num MAX_BUFFER := 512;
 PERS bool paused := FALSE;
-PERS num BUFFER_POS := 2;
+PERS num BUFFER_POS := 0;
 PERS robtarget bufferTargets{MAX_BUFFER};
 PERS speeddata bufferSpeeds{MAX_BUFFER};
+PERS bool BUFFER_LOCKED;
 
 !//External axis position variables
 VAR extjoint externalAxis;
@@ -327,6 +328,9 @@ PROC main()
                 ENDIF
 
             CASE 30: !Add Cartesian Coordinates to buffer
+                WHILE BUFFER_LOCKED DO
+                    !wait
+                ENDWHILE
                 IF nParams = 7 THEN
                     cartesianTarget :=[[params{1},params{2},params{3}],
                                         [params{4},params{5},params{6},params{7}],
@@ -344,6 +348,9 @@ PROC main()
                 ENDIF
 
             CASE 31: !Clear Cartesian Buffer
+                WHILE BUFFER_LOCKED DO
+                    !wait
+                ENDWHILE
                 IF nParams = 0 THEN
                     BUFFER_POS := 0;	
                     ok := SERVER_OK;
@@ -352,6 +359,9 @@ PROC main()
                 ENDIF
 
             CASE 32: !Get Buffer Size)
+                WHILE BUFFER_LOCKED DO
+                    !wait
+                ENDWHILE
                 IF nParams = 0 THEN
                     addString := NumToStr(BUFFER_POS,2);
                     ok := SERVER_OK;
