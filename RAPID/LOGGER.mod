@@ -68,24 +68,30 @@ PROC main()
     SetDO mMoving, 0;
     
 	WHILE TRUE DO
-        WaitDO mMoving, 0;
+!        WaitDO mMoving, 0;
         
-		bufferLeft := NumToStr(MAX_BUFFER - BUFFER_POS, 0);
-		position := CRobT(\Tool:=currentTool \WObj:=currentWObj);
-		data := "# 0 ";
-        data := data + NumToStr(position.trans.x,1) + " ";
-		data := data + NumToStr(position.trans.y,1) + " ";
-        data := data + NumToStr(position.trans.z,1) + " ";
-		data := data + NumToStr(position.rot.q1,3) + " ";
-		data := data + NumToStr(position.rot.q2,3) + " ";
-		data := data + NumToStr(position.rot.q3,3) + " ";
-        data := data + NumToStr(position.rot.q4,3) + " ";
+!		bufferLeft := NumToStr(MAX_BUFFER - BUFFER_POS, 0);
+!		position := CRobT(\Tool:=currentTool \WObj:=currentWObj);
+!		data := "# 0 ";
+!        data := data + NumToStr(position.trans.x,1) + " ";
+!		data := data + NumToStr(position.trans.y,1) + " ";
+!        data := data + NumToStr(position.trans.z,1) + " ";
+!		data := data + NumToStr(position.rot.q1,3) + " ";
+!		data := data + NumToStr(position.rot.q2,3) + " ";
+!		data := data + NumToStr(position.rot.q3,3) + " ";
+!        data := data + NumToStr(position.rot.q4,3) + " ";
+!        data := data + bufferLeft + " ";
+        data := "# 0 ";
+        WaitDO mMoving, 0;
+        bufferLeft := NumToStr(MAX_BUFFER - BUFFER_POS, 0);
+        SetDO mMoving, 1;
         data := data + bufferLeft + " ";
         
 		IF connected = TRUE THEN
 			SocketSend clientSocket \Str:=data;
 		ENDIF
-        SetDO mMoving, 1;
+!        WaitTime 0.1;
+!        SetDO mMoving, 1;
 	ENDWHILE
 	ERROR
 	IF ERRNO=ERR_SOCK_CLOSED THEN
