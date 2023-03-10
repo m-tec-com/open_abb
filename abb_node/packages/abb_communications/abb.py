@@ -72,11 +72,13 @@ class Robot:
                 data = s.recv(4096).split()
                 if(len(data) > 0):
                     if int(data[1]) == 0:
-                        for i in range(2,9):
-                            data[i] = float(data[i])
-                        self.pose = [data[2:5], data[5:9]]
-                        self.bufferLeft = int(data[9])
-                        
+                        #for i in range(2,9):
+                        #    data[i] = float(data[i])
+                        #self.pose = [data[2:5], data[5:9]]
+                        #self.bufferLeft = int(data[9])
+                        self.pose = []
+                        self.bufferLeft = int(data[2])
+
                         print(self.pose, self.bufferLeft)
                         if self.callback != None:
                             self.callback(self.pose, self.bufferLeft)
