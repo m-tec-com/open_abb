@@ -30,24 +30,35 @@ class Robot:
         self.delay   = .08
         self.callback = callback
 
-        self.connect_motion((ip, port_motion))
-        #log_thread = Thread(target = self.get_net, 
-        #                    args   = ((ip, port_logger))).start()
-        threading.Thread(target=self.connect_logger, args=((ip, port_logger))).start()
-        
+        self.ip = ip
+        self.port_motion = port_motion
+        self.port_logger = port_logger
+        self.connect()
+
         self.set_units('millimeters', 'degrees')
         self.set_tool()
         self.set_workobject()
         self.set_speed()
         self.set_zone()
 
+    def connect(self):
+        threading.Thread(target=self.preConnectLogger).start()
+        self.preConnectMotion()
+
+    def preConnectMotion(self):
+        self.connect_motion((self.ip, self.port_motion))
+        pass
+
+    def preConnectLogger(self):
+        self.connect_logger((self.ip, self.port_logger))
+
     def connect_motion(self, remote):        
-        log.info('Attempting to connect to robot motion server at %s', str(remote))
+        log.info('Attempting to connect to robot motion server at %s', self.ip)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(2.5)
         self.sock.connect(remote)
         self.sock.settimeout(None)
-        log.info('Connected to robot motion server at %s', str(remote))
+        log.info('Connected to robot motion server at %s', self.ip)
 
     def connect_logger(self, remote, maxlen=None):
         #self.pose   = deque(maxlen=maxlen)
@@ -58,15 +69,17 @@ class Robot:
         s.setblocking(1)
         try:
             while True:
-                data = map(float, s.recv(4096).split())
-                #if   int(data[1]) == 0: 
-                #    self.pose.append([data[2:5], data[5:]])
-                #elif int(data[1]) == 1: self.joints.append([a[2:5], a[5:]])
-                if int(data[1]) == 1:
-                    self.pose = [data[5:8], data[8:11]]
-                    self.bufferLeft = int(data[11])
-                    if self.callback != None:
-                        self.callback(self.pose, self.bufferLeft)
+                data = s.recv(4096).split()
+                if(len(data) > 0):
+                    if int(data[1]) == 0:
+                        for i in range(2,9):
+                            data[i] = float(data[i])
+                        self.pose = [data[2:5], data[5:9]]
+                        self.bufferLeft = int(data[9])
+                        
+                        print(self.pose, self.bufferLeft)
+                        if self.callback != None:
+                            self.callback(self.pose, self.bufferLeft)
         finally:
             s.shutdown(socket.SHUT_RDWR)
 
@@ -234,6 +247,7 @@ class Robot:
         Move will execute at current speed (which you can change between buffer_add calls)
         '''
         msg = "30 " + self.format_pose(pose)
+        print(msg)
         data = self.send(msg).split()
         return int(float(data[2]))
 
