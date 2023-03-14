@@ -320,6 +320,10 @@ class Robot:
 
     def resume(self):
         return self.send("91 #")
+    
+    def calculateWobj(self, code, pose):
+        msg = "8" + str(code) + " " + self.format_pose(pose)
+        return self.send(msg)
 
     def set_dio(self, value, id=0):
         '''
@@ -336,6 +340,7 @@ class Robot:
         Send a formatted message to the robot socket.
         if wait_for_response, we wait for the response and return it
         '''
+        print("send", message)
         caller = inspect.stack()[1][3]
         log.debug('%-14s sending: %s', caller, message)
         self.sock.send(message.encode())
