@@ -18,12 +18,12 @@ VAR zonedata currentZone;
 PERS num BUFFER_POS;
 PERS bool BUFFER_LOCKED;
 PERS bool MOVING;
-CONST num MAX_BUFFER := 512;
+CONST num MAX_BUFFER := 128;
 
 
 !//Logger sampling rate
-PERS num loggerWaitTime:= 0.01;  !Recommended for real controller
-!PERS num loggerWaitTime:= 0.1;    !Recommended for virtual controller
+!PERS num loggerWaitTime:= 0.01;  !Recommended for real controller
+PERS num loggerWaitTime:= 0.1;    !Recommended for virtual controller
 
 PROC ServerCreateAndConnect(string ip, num port)
 	VAR string clientIP;
@@ -68,9 +68,13 @@ PROC main()
     SetDO mMoving, 0;
     
 	WHILE TRUE DO
-        WaitDO mMoving, 0;
+        
+        
+        
+        !WaitDO mMoving, 0;
         bufferLeft := MAX_BUFFER - BUFFER_POS;
-        SetDO mMoving, 1;
+        !SetDO mMoving, 1;
+        !TPWrite NumToStr(bufferLeft, 0);
 !		position := CRobT(\Tool:=currentTool \WObj:=currentWObj);
 		data := "# 0 ";
 !        data := data + NumToStr(position.trans.x,1) + " ";
@@ -85,6 +89,9 @@ PROC main()
 		IF connected = TRUE THEN
 			SocketSend clientSocket \Str:=data;
 		ENDIF
+        
+        WaitTime loggerWaitTime;
+        
 	ENDWHILE
 	ERROR
 	IF ERRNO=ERR_SOCK_CLOSED THEN

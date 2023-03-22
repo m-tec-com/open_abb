@@ -5,8 +5,8 @@ MODULE SERVER
 !////////////////
 
 !//Robot configuration
-PERS tooldata currentTool := [TRUE,[[0,0,0],[1,0,0,0]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
-PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]];   
+PERS tooldata currentTool := [TRUE,[[0,0,0],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
+PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[1200,-760,865],[1,0,-0.001,-0.006]]];   
 PERS speeddata currentSpeed;
 PERS zonedata currentZone;
 
@@ -34,15 +34,15 @@ VAR jointtarget jointsTarget;
 VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 
 !//Buffered move variables
-CONST num MAX_BUFFER := 512;
-PERS bool paused := FALSE;
-PERS num BUFFER_POS := 0;
+CONST num MAX_BUFFER := 128;
+PERS bool paused := TRUE;
+PERS num BUFFER_POS := 496;
 PERS robtarget bufferTargets{MAX_BUFFER};
 PERS speeddata bufferSpeeds{MAX_BUFFER};
 PERS bool BUFFER_LOCKED;
 
 !//External axis position variables
-VAR extjoint externalAxis;
+PERS extjoint externalAxis;
 
 !//Circular move buffer
 VAR robtarget circPoint;
@@ -160,7 +160,12 @@ PROC main()
     VAR bool reconnected;        !//Drop and reconnection happened during serving a command
     VAR robtarget cartesianPose;
     VAR jointtarget jointsPose;
-    			
+    
+    VAR robtarget pwobj1;
+    VAR robtarget pwobj2;
+    VAR robtarget pwobj3;
+    VAR wobjdata cwobj;
+    
     !//Motion configuration
     !ConfL \Off;
     !SingArea \Wrist;
@@ -415,6 +420,33 @@ PROC main()
 !                    ok:=SERVER_BAD_MSG;
 !                ENDIF
             
+            CASE 80:
+                !pwobj1 :=[[1400,-655,880],[1,0,0,0],[0,0,0,0],externalAxis];
+                !pwobj2 :=[[2180,-655,880],[1,0,0,0],[0,0,0,0],externalAxis];
+                !pwobj3 :=[[1400,460,880],[1,0,0,0],[0,0,0,0],externalAxis];
+                cwobj := [ FALSE, TRUE, "", [ [0, 0, 0], [1, 0, 0 ,0] ], [ [0, 200, 30], [1, 0, 0 ,0] ] ];
+                cwobj.oframe := DefFrame(pwobj1, pwobj2, pwobj3);
+                addString := NumToStr(cwobj.oframe.trans.x,2) + " ";
+                addString := addString + NumToStr(cwobj.oframe.trans.y,2) + " ";
+                addString := addString + NumToStr(cwobj.oframe.trans.z,2) + " ";
+                addString := addString + NumToStr(cwobj.oframe.rot.q1,3) + " ";
+                addString := addString + NumToStr(cwobj.oframe.rot.q2,3) + " ";
+                addString := addString + NumToStr(cwobj.oframe.rot.q3,3) + " ";
+                addString := addString + NumToStr(cwobj.oframe.rot.q4,3); !End of string
+                TPWrite addString;
+                ok := SERVER_OK;
+                
+            CASE 81:
+                pwobj1 :=[[params{1},params{2},params{3}],[params{4},params{5},params{6},params{7}],[0,0,0,0],externalAxis];
+                ok := SERVER_OK;
+            CASE 82:
+                pwobj2 :=[[params{1},params{2},params{3}],[params{4},params{5},params{6},params{7}],[0,0,0,0],externalAxis];
+                ok := SERVER_OK;
+            CASE 83:
+                pwobj3 :=[[params{1},params{2},params{3}],[params{4},params{5},params{6},params{7}],[0,0,0,0],externalAxis];
+                ok := SERVER_OK;
+                
+
             CASE 90: !pause
                 paused := TRUE;
                 ok:=SERVER_OK;
