@@ -1,5 +1,5 @@
 MODULE move
-    CONST num MAX_BUFFER := 512;
+    CONST num MAX_BUFFER := 128;
     PERS robtarget bufferTargets{MAX_BUFFER};
     PERS speeddata bufferSpeeds{MAX_BUFFER};
     PERS num BUFFER_POS;
@@ -13,7 +13,7 @@ MODULE move
     
     PROC main()
         
-        TriggIO Movement, 0 \DOp:=mMoving, 0;
+        TriggIO Movement, 0.1 \Time \DOp:=mMoving, 0;
         
         MOVING := FALSE;
         BUFFER_LOCKED := FALSE;

@@ -5,8 +5,8 @@ MODULE SERVER
 !////////////////
 
 !//Robot configuration
-PERS tooldata currentTool := [TRUE,[[0,-280,47.5],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
-PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[1400,-655,880],[1,0,0,0]]];   
+PERS tooldata currentTool := [TRUE,[[0,0,0],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
+PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[1200,-760,865],[1,0,-0.001,-0.006]]];   
 PERS speeddata currentSpeed;
 PERS zonedata currentZone;
 
@@ -34,9 +34,9 @@ VAR jointtarget jointsTarget;
 VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 
 !//Buffered move variables
-CONST num MAX_BUFFER := 512;
+CONST num MAX_BUFFER := 128;
 PERS bool paused := TRUE;
-PERS num BUFFER_POS := 0;
+PERS num BUFFER_POS := 496;
 PERS robtarget bufferTargets{MAX_BUFFER};
 PERS speeddata bufferSpeeds{MAX_BUFFER};
 PERS bool BUFFER_LOCKED;
