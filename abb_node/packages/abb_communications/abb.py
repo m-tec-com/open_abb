@@ -27,7 +27,7 @@ class Robot:
                  port_logger = 5001,
                  callback = None):
 
-        self.delay   = .08
+        self.delay   = .04
         self.callback = callback
 
         self.ip = ip
@@ -249,9 +249,11 @@ class Robot:
         Move will execute at current speed (which you can change between buffer_add calls)
         '''
         msg = "30 " + self.format_pose(pose)
-        print(msg)
-        data = self.send(msg).split()
-        return int(float(data[2]))
+        #print(msg)
+        #data = self.send(msg).split()
+        #return int(float(data[2]))
+        self.send(msg, False)
+        return
 
     def buffer_set(self, pose_list):
         '''
@@ -340,7 +342,7 @@ class Robot:
         Send a formatted message to the robot socket.
         if wait_for_response, we wait for the response and return it
         '''
-        print("send", message)
+        #print("send", message)
         caller = inspect.stack()[1][3]
         log.debug('%-14s sending: %s', caller, message)
         self.sock.send(message.encode())
