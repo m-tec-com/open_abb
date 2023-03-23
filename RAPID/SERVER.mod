@@ -36,7 +36,8 @@ VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 !//Buffered move variables
 CONST num MAX_BUFFER := 128;
 PERS bool paused := TRUE;
-PERS num BUFFER_POS := 496;
+PERS num BUFFER_POS;
+PERS num BUFFER_LEFT;
 PERS robtarget bufferTargets{MAX_BUFFER};
 PERS speeddata bufferSpeeds{MAX_BUFFER};
 PERS bool BUFFER_LOCKED;
@@ -165,6 +166,8 @@ PROC main()
     VAR robtarget pwobj2;
     VAR robtarget pwobj3;
     VAR wobjdata cwobj;
+    VAR num writePos;
+    
     
     !//Motion configuration
     !ConfL \Off;
@@ -341,12 +344,22 @@ PROC main()
                                         [params{4},params{5},params{6},params{7}],
                                         [0,0,0,0],
                                         externalAxis];
-                    IF BUFFER_POS < MAX_BUFFER THEN
-                        BUFFER_POS := BUFFER_POS + 1;
-                        bufferTargets{BUFFER_POS} := cartesianTarget;
-                        bufferSpeeds{BUFFER_POS} := currentSpeed;
+!                    IF BUFFER_POS < MAX_BUFFER THEN
+!                        BUFFER_POS := BUFFER_POS + 1;
+!                        bufferTargets{BUFFER_POS} := cartesianTarget;
+!                        bufferSpeeds{BUFFER_POS} := currentSpeed;
+!                    ENDIF
+                    IF BUFFER_LEFT > 0 THEN
+                        writePos := BUFFER_POS + MAX_BUFFER - BUFFER_LEFT;
+                        IF writePos > MAX_BUFFER THEN
+                            writePos := writePos - MAX_BUFFER;
+                        ENDIF
+                        bufferTargets{writePos} := cartesianTarget;
+                        bufferSpeeds{writePos} := currentSpeed;
+                        BUFFER_LEFT := BUFFER_LEFT - 1;
                     ENDIF
-                    addString := NumToStr(MAX_BUFFER - BUFFER_POS,2);
+                    !addString := NumToStr(MAX_BUFFER - BUFFER_POS,2);
+                    addString := NumToStr(BUFFER_LEFT,2);
                     ok := SERVER_OK;
                 ELSE
                     ok:=SERVER_BAD_MSG;
@@ -357,7 +370,8 @@ PROC main()
                     !wait
                 ENDWHILE
                 IF nParams = 0 THEN
-                    BUFFER_POS := 0;	
+                    BUFFER_POS := 1;
+                    BUFFER_LEFT := MAX_BUFFER;
                     ok := SERVER_OK;
                 ELSE
                     ok:=SERVER_BAD_MSG;
@@ -368,7 +382,7 @@ PROC main()
                     !wait
                 ENDWHILE
                 IF nParams = 0 THEN
-                    addString := NumToStr(BUFFER_POS,2);
+                    addString := NumToStr(MAX_BUFFER-BUFFER_LEFT,2);
                     ok := SERVER_OK;
                 ELSE
                     ok:=SERVER_BAD_MSG;
@@ -493,6 +507,7 @@ PROC main()
 				    sendString := NumToStr(instructionCode,0);
                     sendString := sendString + " " + NumToStr(ok,0);
                     sendString := sendString + " " + addString;
+                    !TPWrite sendString;
                     SocketSend clientSocket \Str:=sendString;
 			    ENDIF
             ENDIF

@@ -16,6 +16,7 @@ VAR speeddata currentSpeed;
 VAR zonedata currentZone;
 
 PERS num BUFFER_POS;
+PERS num BUFFER_LEFT;
 PERS bool BUFFER_LOCKED;
 PERS bool MOVING;
 CONST num MAX_BUFFER := 128;
@@ -72,7 +73,7 @@ PROC main()
         
         
         !WaitDO mMoving, 0;
-        bufferLeft := MAX_BUFFER - BUFFER_POS;
+        !bufferLeft := MAX_BUFFER - BUFFER_POS;
         !SetDO mMoving, 1;
         !TPWrite NumToStr(bufferLeft, 0);
 !		position := CRobT(\Tool:=currentTool \WObj:=currentWObj);
@@ -84,7 +85,8 @@ PROC main()
 !		data := data + NumToStr(position.rot.q2,3) + " ";
 !		data := data + NumToStr(position.rot.q3,3) + " ";
 !        data := data + NumToStr(position.rot.q4,3) + " ";
-        data := data + NumToStr(bufferLeft, 0) + " ";
+        !data := data + NumToStr(bufferLeft, 0) + " ";
+        data := data + NumToStr(BUFFER_LEFT, 0) + " ";
         
 		IF connected = TRUE THEN
 			SocketSend clientSocket \Str:=data;
