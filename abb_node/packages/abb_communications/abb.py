@@ -276,7 +276,7 @@ class Robot:
         data = self.send(msg)
         if self.buffer_len() != 0:
             log.warn('clear_buffer failed! buffer_len: %i', self.buffer_len())
-            raise NameError('clear_buffer failed!')
+            #raise NameError('clear_buffer failed!')
         return data
 
     def buffer_len(self):
@@ -348,7 +348,7 @@ class Robot:
         self.sock.send(message.encode())
         time.sleep(self.delay)
         if not wait_for_response: return
-        data = self.sock.recv(4096)
+        data = self.sock.recv(4096).decode()
         log.debug('%-14s recieved: %s', caller, data)
         return data
         
