@@ -12,9 +12,12 @@ MODULE move
     PERS bool MOVING;
     VAR triggdata Movement;
     
+    PERS robtarget target := [[0,0,500],[0,0,-1,0], [0,0,0,0], [ 11, 12.3, 9E9, 9E9, 9E9, 9E9]];
+    
     PROC main()
         BUFFER_LEFT := MAX_BUFFER;
         BUFFER_POS := 1;
+        BUFFER_LOCKED := FALSE;
         !TriggIO Movement, 0.1 \Time \DOp:=mMoving, 0;
         
         MOVING := FALSE;
@@ -34,6 +37,7 @@ MODULE move
     
     PROC movePoint()
         MoveL bufferTargets{BUFFER_POS}, bufferSpeeds{BUFFER_POS}, currentZone, currentTool \WObj:=currentWobj;
+        BUFFER_LOCKED := TRUE;
         BUFFER_LEFT := BUFFER_LEFT + 1;
         IF BUFFER_LEFT > MAX_BUFFER THEN
             BUFFER_LEFT := MAX_BUFFER;
@@ -42,6 +46,7 @@ MODULE move
         IF BUFFER_POS > MAX_BUFFER THEN
             BUFFER_POS := BUFFER_POS - MAX_BUFFER;
         ENDIF
+        BUFFER_LOCKED := FALSE;
         !TriggL bufferTargets{1}, bufferSpeeds{1}, Movement, currentZone, currentTool \WObj:=currentWobj;
         !moveBuffer;
     ENDPROC
