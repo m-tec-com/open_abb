@@ -5,8 +5,8 @@ MODULE SERVER
 !////////////////
 
 !//Robot configuration
-PERS tooldata currentTool := [TRUE,[[0,0,0],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
-PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[1200,-760,865],[1,0,-0.001,-0.006]]];   
+PERS tooldata currentTool := [TRUE,[[-326,0,28],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
+PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]];   
 PERS speeddata currentSpeed;
 PERS zonedata currentZone;
 
@@ -35,7 +35,7 @@ VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 
 !//Buffered move variables
 CONST num MAX_BUFFER := 128;
-PERS bool paused := TRUE;
+PERS bool paused := FALSE;
 PERS num BUFFER_POS;
 PERS num BUFFER_LEFT;
 PERS robtarget bufferTargets{MAX_BUFFER};
@@ -463,10 +463,12 @@ PROC main()
 
             CASE 90: !pause
                 paused := TRUE;
+                StopMove;
                 ok:=SERVER_OK;
 
             CASE 91: !resume
                 paused := FALSE;
+                StartMove;
                 ok:=SERVER_OK;
 				
             CASE 98: !returns current robot info: serial number, robotware version, and robot type
@@ -496,7 +498,7 @@ PROC main()
                     ok := SERVER_BAD_MSG;
                 ENDIF
             DEFAULT:
-                TPWrite "SERVER: Illegal instruction code";
+                TPWrite "SERVER: Illegal instruction code" + NumToStr(instructionCode,0);
                 ok := SERVER_BAD_MSG;
         ENDTEST
 		

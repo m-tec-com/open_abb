@@ -37,6 +37,9 @@ MODULE move
     
     PROC movePoint()
         MoveL bufferTargets{BUFFER_POS}, bufferSpeeds{BUFFER_POS}, currentZone, currentTool \WObj:=currentWobj;
+        WHILE BUFFER_LOCKED DO
+            !wait
+        ENDWHILE
         BUFFER_LOCKED := TRUE;
         BUFFER_LEFT := BUFFER_LEFT + 1;
         IF BUFFER_LEFT > MAX_BUFFER THEN
