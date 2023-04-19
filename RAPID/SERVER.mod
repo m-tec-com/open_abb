@@ -38,6 +38,7 @@ CONST num MAX_BUFFER := 128;
 PERS bool paused := FALSE;
 PERS num BUFFER_POS;
 PERS num BUFFER_LEFT;
+PERS bool MOVING;
 PERS robtarget bufferTargets{MAX_BUFFER};
 PERS speeddata bufferSpeeds{MAX_BUFFER};
 PERS bool BUFFER_LOCKED;
@@ -349,7 +350,7 @@ PROC main()
 !                        bufferTargets{BUFFER_POS} := cartesianTarget;
 !                        bufferSpeeds{BUFFER_POS} := currentSpeed;
 !                    ENDIF
-                    IF BUFFER_LEFT > 0 THEN
+                    IF BUFFER_LEFT > 0 THEN                        
                         writePos := BUFFER_POS + MAX_BUFFER - BUFFER_LEFT;
                         IF writePos > MAX_BUFFER THEN
                             writePos := writePos - MAX_BUFFER;
@@ -370,8 +371,11 @@ PROC main()
                     !wait
                 ENDWHILE
                 IF nParams = 0 THEN
-                    BUFFER_POS := 1;
-                    BUFFER_LEFT := MAX_BUFFER;
+                    IF MOVING THEN
+                        BUFFER_LEFT := MAX_BUFFER - 1;
+                    ELSE 
+                        BUFFER_LEFT := MAX_BUFFER;
+                    ENDIF
                     ok := SERVER_OK;
                 ELSE
                     ok:=SERVER_BAD_MSG;

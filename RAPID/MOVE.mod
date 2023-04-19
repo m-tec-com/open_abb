@@ -27,9 +27,10 @@ MODULE move
         
         !BUFFER_POS := 0;
         WHILE TRUE DO
-            IF BUFFER_LEFT < MAX_BUFFER THEN
-            !IF BUFFER_POS > 0 THEN
+            IF BUFFER_LEFT < MAX_BUFFER AND BUFFER_POS > 0 THEN
+                MOVING := TRUE;
                 movePoint;
+                MOVING := FALSE;
             ENDIF
         ENDWHILE
     ENDPROC
