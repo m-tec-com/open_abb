@@ -35,7 +35,7 @@ VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 
 !//Buffered move variables
 CONST num MAX_BUFFER := 128;
-PERS bool paused := FALSE;
+PERS bool paused := TRUE;
 PERS num BUFFER_POS;
 PERS num BUFFER_LEFT;
 PERS bool MOVING;
@@ -167,7 +167,7 @@ PROC main()
     VAR robtarget pwobj2;
     VAR robtarget pwobj3;
     VAR wobjdata cwobj;
-    VAR num writePos;
+    VAR num writePos := 1;
     
     
     !//Motion configuration
@@ -351,7 +351,7 @@ PROC main()
 !                        bufferSpeeds{BUFFER_POS} := currentSpeed;
 !                    ENDIF
                     IF BUFFER_LEFT > 0 THEN                        
-                        writePos := BUFFER_POS + MAX_BUFFER - BUFFER_LEFT;
+                        writePos := writePos+1;
                         IF writePos > MAX_BUFFER THEN
                             writePos := writePos - MAX_BUFFER;
                         ENDIF
@@ -371,10 +371,13 @@ PROC main()
                     !wait
                 ENDWHILE
                 IF nParams = 0 THEN
+                    writePos := 0;
                     IF MOVING THEN
                         BUFFER_LEFT := MAX_BUFFER - 1;
+                        BUFFER_POS := 0;
                     ELSE 
                         BUFFER_LEFT := MAX_BUFFER;
+                        BUFFER_POS := 1;
                     ENDIF
                     ok := SERVER_OK;
                 ELSE
