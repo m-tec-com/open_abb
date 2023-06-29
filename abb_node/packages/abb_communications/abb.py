@@ -42,8 +42,8 @@ class Robot:
         self.set_zone()
 
     def connect(self):
-        threading.Thread(target=self.preConnectLogger).start()
-        self.preConnectMotion()
+        threading.Thread(target=self.preConnectMotion).start()
+        self.preConnectLogger()
 
     def preConnectMotion(self):
         self.connect_motion((self.ip, self.port_motion))
@@ -64,26 +64,35 @@ class Robot:
         #self.pose   = deque(maxlen=maxlen)
         #self.joints = deque(maxlen=maxlen)
         
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(remote)
-        s.setblocking(1)
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.connect(remote)
+        self.s.setblocking(1)
+        self.readLogger()
+        threading.Thread(target=self.readLoggerLoop).start()
+
+    def readLoggerLoop(self):
         try:
             while True:
-                data = s.recv(4096).split()
-                if(len(data) > 0):
-                    if int(data[1]) == 0:
-                        #for i in range(2,9):
-                        #    data[i] = float(data[i])
-                        #self.pose = [data[2:5], data[5:9]]
-                        #self.bufferLeft = int(data[9])
-                        self.pose = []
-                        self.bufferLeft = int(data[2])
-
-                        print(self.pose, self.bufferLeft)
-                        if self.callback != None:
-                            self.callback(self.pose, self.bufferLeft)
+                self.readLogger()
         finally:
-            s.shutdown(socket.SHUT_RDWR)
+            self.s.shutdown(socket.SHUT_RDWR)
+        
+
+    def readLogger(self):
+        data = self.s.recv(4096).split()
+        if(len(data) > 0):
+            if int(data[1]) == 0:
+                #for i in range(2,9):
+                #    data[i] = float(data[i])
+                #self.pose = [data[2:5], data[5:9]]
+                #self.bufferLeft = int(data[9])
+                self.pose = []
+                self.bufferLeft = int(data[2])
+
+                print(self.pose, self.bufferLeft)
+                if self.callback != None:
+                    self.callback(self.pose, self.bufferLeft)
+
 
     def set_units(self, linear, angular):
         units_l = {'millimeters': 1.0,
