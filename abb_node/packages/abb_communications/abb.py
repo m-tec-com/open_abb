@@ -14,7 +14,6 @@ import json
 import time
 import inspect
 import threading
-from collections import deque
 import logging
 
 log = logging.getLogger(__name__)
@@ -60,9 +59,7 @@ class Robot:
         self.sock.settimeout(None)
         log.info('Connected to robot motion server at %s', self.ip)
 
-    def connect_logger(self, remote, maxlen=None):
-        #self.pose   = deque(maxlen=maxlen)
-        #self.joints = deque(maxlen=maxlen)
+    def connect_logger(self, remote):
         
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect(remote)
@@ -380,7 +377,7 @@ class Robot:
     def __enter__(self):
         return self
         
-    def __exit__(self, type, value, traceback):
+    def __exit__(self):
         self.close()
 
 def check_coordinates(coordinates):
