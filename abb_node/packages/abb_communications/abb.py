@@ -15,10 +15,25 @@ import time
 import inspect
 import threading
 import logging
+import signal
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
-    
+
+
+class Timeout:
+    def __init__(self, seconds=1, error_message='Timeout'):
+        self.seconds = seconds
+        self.error_message = error_message
+    def handle_timeout(self, signum, frame):
+        raise TimeoutError(self.error_message)
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.handle_timeout)
+        signal.alarm(self.seconds)
+    def __exit__(self, type, value, traceback):
+        signal.alarm(0)
+
+
 class Robot:
     def __init__(self, 
                  ip          = '20.20.20.21', 
@@ -343,7 +358,11 @@ class Robot:
         return 
         #return self.send(msg)
         
-    def send(self, message, wait_for_response=True):
+    def send(self, message, wait_for_response):
+        with Timeout():
+            self.sendData(message, wait_for_response)
+
+    def sendData(self, message, wait_for_response=True):
         '''
         Send a formatted message to the robot socket.
         if wait_for_response, we wait for the response and return it
