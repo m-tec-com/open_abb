@@ -358,11 +358,7 @@ class Robot:
         return 
         #return self.send(msg)
         
-    def send(self, message, wait_for_response):
-        with Timeout():
-            self.sendData(message, wait_for_response)
-
-    def sendData(self, message, wait_for_response=True):
+    def send(self, message, wait_for_response=True):
         '''
         Send a formatted message to the robot socket.
         if wait_for_response, we wait for the response and return it

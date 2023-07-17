@@ -23,7 +23,7 @@ MODULE move
         MOVING := FALSE;
         BUFFER_LOCKED := FALSE;
         ConfL \Off;
-        SingArea \Wrist;
+        SingArea \LockAxis4;
         
         !BUFFER_POS := 0;
         WHILE TRUE DO
