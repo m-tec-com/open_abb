@@ -44,6 +44,10 @@ class Robot:
         self.delay   = .04
         self.callback = callback
 
+        self.sendQue = []
+        self.prioritySendQue = []
+        self.isSending = False
+
         self.ip = ip
         self.port_motion = port_motion
         self.port_logger = port_logger
@@ -115,63 +119,6 @@ class Robot:
         self.scale_linear = units_l[linear]
         self.scale_angle  = units_a[angular]
 
-    def set_cartesian(self, pose):
-        '''
-        Executes a move immediately from the current pose,
-        to 'pose', with units of millimeters.
-        '''
-        msg  = "01 " + self.format_pose(pose)   
-        return self.send(msg)
-
-    def set_joints(self, joints):
-        '''
-        Executes a move immediately, from current joint angles,
-        to 'joints', in degrees. 
-        '''
-        if len(joints) != 6: return False
-        msg = "02 "
-        for joint in joints: msg += format(joint*self.scale_angle, "+08.2f") + " " 
-        msg += "#" 
-        return self.send(msg)
-
-    def get_cartesian(self):
-        '''
-        Returns the current pose of the robot, in millimeters
-        '''
-        msg = "03 #"
-        data = self.send(msg).split()
-        r = [float(s) for s in data]
-        return [r[2:5], r[5:9]]
-
-    def get_joints(self):
-        '''
-        Returns the current angles of the robots joints, in degrees. 
-        '''
-        msg = "04 #"
-        data = self.send(msg).split()
-        return [float(s) / self.scale_angle for s in data[2:8]]
-
-    def get_external_axis(self):
-        '''
-        If you have an external axis connected to your robot controller
-        (such as a FlexLifter 600, google it), this returns the joint angles
-        '''
-        msg = "05 #"
-        data = self.send(msg).split()
-        return [float(s) for s in data[2:8]]
-       
-    def get_robotinfo(self):
-        '''
-        Returns a robot- unique string, with things such as the
-        robot's model number. 
-        Example output from and IRB 2400:
-        ['24-53243', 'ROBOTWARE_5.12.1021.01', '2400/16 Type B']
-        '''
-        msg = "98 #"
-        data = str(self.send(msg))[5:].split('*')
-        log.debug('get_robotinfo result: %s', str(data))
-        return data
-
     def set_tool(self, tool=[[0,0,0], [1,0,0,0]]):
         '''
         Sets the tool centerpoint (TCP) of the robot. 
@@ -181,27 +128,17 @@ class Robot:
         Offsets are from tool0, which is defined at the intersection of the
         tool flange center axis and the flange face.
         '''
-        msg       = "06 " + self.format_pose(tool)    
-        self.send(msg)
+        msg       = "06 " + self.format_pose(tool) # 7*9+1 +3 = 67  
+        self.send(msg, priority=True)
         self.tool = tool
-
-    def load_json_tool(self, file_obj):
-        if file_obj.__class__.__name__ == 'str':
-            file_obj = open(filename, 'rb')
-        tool = check_coordinates(json.load(file_obj))
-        self.set_tool(tool)
-        
-    def get_tool(self): 
-        log.debug('get_tool returning: %s', str(self.tool))
-        return self.tool
 
     def set_workobject(self, work_obj=[[0,0,0],[1,0,0,0]]):
         '''
         The workobject is a local coordinate frame you can define on the robot,
         then subsequent cartesian moves will be in this coordinate frame. 
         '''
-        msg = "07 " + self.format_pose(work_obj)   
-        self.send(msg)
+        msg = "07 " + self.format_pose(work_obj)  # 67
+        self.send(msg, priority=True)
 
     def set_speed(self, speed=[100,50,50,50]):
         '''
@@ -210,12 +147,12 @@ class Robot:
         '''
 
         if len(speed) != 4: return False
-        msg = "08 " 
-        msg += format(speed[0], "+08.1f") + " " 
-        msg += format(speed[1], "+08.2f") + " "  
-        msg += format(speed[2], "+08.1f") + " " 
-        msg += format(speed[3], "+08.2f") + " #"     
-        self.send(msg)
+        msg = "08 " #3
+        msg += format(speed[0], "+08.1f") + " " #9
+        msg += format(speed[1], "+08.2f") + " " #9
+        msg += format(speed[2], "+08.1f") + " " #9
+        msg += format(speed[3], "+08.2f") + " #" #10    
+        self.send(msg) #40
 
     def set_zone(self, 
                  zone_key     = 'z1', 
@@ -257,12 +194,12 @@ class Robot:
             zone = zone_dict[zone_key]
         else: return False
         
-        msg = "09 " 
-        msg += str(int(point_motion)) + " "
-        msg += format(zone[0], "+08.4f") + " " 
-        msg += format(zone[1], "+08.4f") + " " 
-        msg += format(zone[2], "+08.4f") + " #" 
-        self.send(msg)
+        msg = "09 " #3
+        msg += str(int(point_motion)) + " " #2
+        msg += format(zone[0], "+08.4f") + " " #9
+        msg += format(zone[1], "+08.4f") + " " #9
+        msg += format(zone[2], "+08.4f") + " " #10
+        self.send(msg) #33
 
     def buffer_add(self, pose):
         '''
@@ -270,121 +207,82 @@ class Robot:
         Move will execute at current speed (which you can change between buffer_add calls)
         '''
         msg = "30 " + self.format_pose(pose)
-        #print(msg)
-        #data = self.send(msg).split()
-        #return int(float(data[2]))
         self.send(msg, False)
-        return
-
-    def buffer_set(self, pose_list):
-        '''
-        Adds every pose in pose_list to the remote buffer
-        '''
-        self.clear_buffer()
-        for pose in pose_list: 
-            self.buffer_add(pose)
-        if self.buffer_len() == len(pose_list):
-            log.debug('Successfully added %i poses to remote buffer', 
-                      len(pose_list))
-            return True
-        else:
-            log.warn('Failed to add poses to remote buffer!')
-            self.clear_buffer()
-            return False
 
     def clear_buffer(self):
-        msg = "31 #"
-        data = self.send(msg)
-        if self.buffer_len() != 0:
-            log.warn('clear_buffer failed! buffer_len: %i', self.buffer_len())
-            #raise NameError('clear_buffer failed!')
-        return data
-
-    def buffer_len(self):
-        '''
-        Returns the length (number of poses stored) of the remote buffer
-        '''
-        msg = "32 #"
-        data = self.send(msg).split()
-        return int(float(data[2]))
-
-    def buffer_execute(self):
-        '''
-        Immediately execute linear moves to every pose in the remote buffer.
-        '''
-        msg = "33 #"
-        return self.send(msg)
-
-    def set_external_axis(self, axis_unscaled=[-550,0,0,0,0,0]):
-        if len(axis_values) != 6: return False
-        msg = "34 "
-        for axis in axis_values:
-            msg += format(axis, "+08.2f") + " " 
-        msg += "#"   
-        return self.send(msg)
-
-    def move_circular(self, pose_onarc, pose_end):
-        '''
-        Executes a movement in a circular path from current position, 
-        through pose_onarc, to pose_end
-        '''
-        msg_0 = "35 " + self.format_pose(pose_onarc)  
-        msg_1 = "36 " + self.format_pose(pose_end)
-
-        data = self.send(msg_0).split()
-        if data[1] != '1': 
-            log.warn('move_circular incorrect response, bailing!')
-            return False
-        return self.send(msg_1)
-
+        msg = "31 "
+        self.send(msg)
 
     def pause(self):
-        return self.send("90 #")
+        self.send("90 ", priority=True)
 
     def resume(self):
-        return self.send("91 #")
+        self.send("91 ", priority=True)
     
     def calculateWobj(self, code, pose):
         msg = "8" + str(code) + " " + self.format_pose(pose)
-        return self.send(msg)
-
-    def set_dio(self, value, id=0):
-        '''
-        A function to set a physical DIO line on the robot.
-        For this to work you're going to need to edit the RAPID function
-        and fill in the DIO you want this to switch. 
-        '''
-        msg = '97 ' + str(int(bool(value))) + ' #'
-        return 
-        #return self.send(msg)
+        self.send(msg)
         
-    def send(self, message, wait_for_response=True):
+    def send(self, message, wait_for_response=True, priority=False):
+        msg = {
+            "message":message,
+            "wait_for_response": wait_for_response
+            }
+        if priority:
+            self.prioritySendQue.append(msg)
+        else:
+            self.sendQue.append(msg)
+        self.sender()
+
+    def sender(self):
         '''
         Send a formatted message to the robot socket.
-        if wait_for_response, we wait for the response and return it
+        if wait_for_response, we wait for the response
         '''
+        
+        if self.isSending:
+            print("isSending")
+            return
+        self.isSending = True
         #print("send", message)
+
+        if len(self.prioritySendQue) == 0 and len(self.sendQue) == 0:
+            self.isSending = False
+            return
+
+        if len(self.prioritySendQue) != 0:
+            msg = self.prioritySendQue.pop()
+        else:
+            msg = self.sendQue.pop()
+        message = msg["message"]
+        wait_for_response = msg["wait_for_response"]
+
+        while len(message) < 66:
+            message += "*"
+        message += "#"
+
         caller = inspect.stack()[1][3]
         log.debug('%-14s sending: %s', caller, message)
         self.sock.send(message.encode())
         time.sleep(self.delay)
-        if not wait_for_response: return
-        data = self.sock.recv(4096).decode()
-        log.debug('%-14s recieved: %s', caller, data)
-        return data
+        if wait_for_response:
+            data = self.sock.recv(4096).decode()
+            log.debug('%-14s recieved: %s', caller, data)
+        self.isSending = False
+        self.sender()
         
     def format_pose(self, pose):
         pose = check_coordinates(pose)
         msg  = ''
         for cartesian in pose[0]:
-            msg += format(cartesian * self.scale_linear,  "+08.1f") + " " 
+            msg += format(cartesian * self.scale_linear,  "+08.1f") + " " #9
         for quaternion in pose[1]:
-            msg += format(quaternion, "+08.5f") + " " 
-        msg += "#" 
+            msg += format(quaternion, "+08.5f") + " " #9
+        msg += "" #1
         return msg       
         
     def close(self):
-        self.send("99 #", False)
+        self.send("99 ", False)
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
         log.info('Disconnected from ABB robot.')
