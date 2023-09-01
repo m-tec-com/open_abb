@@ -5,7 +5,7 @@ MODULE SERVER
 !////////////////
 
 !//Robot configuration
-PERS tooldata currentTool := [TRUE,[[-326,0,28],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
+PERS tooldata currentTool := [TRUE,[[0,0,0],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
 PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]];   
 PERS speeddata currentSpeed;
 PERS zonedata currentZone;
@@ -35,7 +35,7 @@ VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 
 !//Buffered move variables
 CONST num MAX_BUFFER := 128;
-PERS bool paused := FALSE;
+PERS bool paused := TRUE;
 PERS num BUFFER_POS;
 PERS num BUFFER_LEFT;
 PERS bool MOVING;
@@ -167,7 +167,7 @@ PROC main()
     VAR robtarget pwobj2;
     VAR robtarget pwobj3;
     VAR wobjdata cwobj;
-    VAR num writePos;
+    VAR num writePos := 1;
     
     
     !//Motion configuration
@@ -191,9 +191,9 @@ PROC main()
         addString := "";            
 
         !//Wait for a command
-        SocketReceive clientSocket \Str:=receivedString \Time:=WAIT_MAX;
+        SocketReceive clientSocket \Str:=receivedString  \ReadNoOfBytes:=67 \Time:=WAIT_MAX;
         ParseMsg receivedString;
-	
+        
         !//Execution of the command
         TEST instructionCode
             CASE 0: !Ping
@@ -351,7 +351,7 @@ PROC main()
 !                        bufferSpeeds{BUFFER_POS} := currentSpeed;
 !                    ENDIF
                     IF BUFFER_LEFT > 0 THEN                        
-                        writePos := BUFFER_POS + MAX_BUFFER - BUFFER_LEFT;
+                        writePos := writePos+1;
                         IF writePos > MAX_BUFFER THEN
                             writePos := writePos - MAX_BUFFER;
                         ENDIF
@@ -371,10 +371,13 @@ PROC main()
                     !wait
                 ENDWHILE
                 IF nParams = 0 THEN
+                    writePos := 0;
                     IF MOVING THEN
                         BUFFER_LEFT := MAX_BUFFER - 1;
+                        BUFFER_POS := 0;
                     ELSE 
                         BUFFER_LEFT := MAX_BUFFER;
+                        BUFFER_POS := 1;
                     ENDIF
                     ok := SERVER_OK;
                 ELSE
@@ -504,6 +507,7 @@ PROC main()
             DEFAULT:
                 TPWrite "SERVER: Illegal instruction code" + NumToStr(instructionCode,0);
                 ok := SERVER_BAD_MSG;
+                TPWrite receivedString;
         ENDTEST
 		
         !Compose the acknowledge string to send back to the client
