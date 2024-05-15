@@ -5,7 +5,7 @@ MODULE SERVER
 !////////////////
 
 !//Robot configuration
-PERS tooldata currentTool := [TRUE,[[-326,0,28],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
+PERS tooldata currentTool := [TRUE,[[0,0,0],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
 PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]];   
 PERS speeddata currentSpeed;
 PERS zonedata currentZone;
@@ -141,7 +141,7 @@ ENDPROC
 PROC Initialize()
     currentTool := [TRUE,[[0,0,0],[1,0,0,0]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
     currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]];
-    currentSpeed := [100, 50, 0, 0];
+    currentSpeed := [250, 250, 250, 250];
     currentZone := [FALSE, 0.3, 0.3,0.3,0.03,0.3,0.03]; !z0
 	
 	!Find the current external axis values so they don't move when we start
@@ -191,9 +191,9 @@ PROC main()
         addString := "";            
 
         !//Wait for a command
-        SocketReceive clientSocket \Str:=receivedString \Time:=WAIT_MAX;
+        SocketReceive clientSocket \Str:=receivedString  \ReadNoOfBytes:=67 \Time:=WAIT_MAX;
         ParseMsg receivedString;
-	
+        
         !//Execution of the command
         TEST instructionCode
             CASE 0: !Ping
@@ -304,19 +304,19 @@ PROC main()
                 ENDIF
 
             CASE 8: !Set Speed of the Robot
-                IF nParams = 4 THEN
-                    currentSpeed.v_tcp:=params{1};
-                    currentSpeed.v_ori:=params{2};
-                    currentSpeed.v_leax:=params{3};
-                    currentSpeed.v_reax:=params{4};
-                    ok := SERVER_OK;
-                ELSEIF nParams = 2 THEN
-					currentSpeed.v_tcp:=params{1};
-					currentSpeed.v_ori:=params{2};
-					ok := SERVER_OK;
-				ELSE
-                    ok:=SERVER_BAD_MSG;
-                ENDIF
+                !IF nParams = 4 THEN
+                !    currentSpeed.v_tcp:=params{1};
+                !    currentSpeed.v_ori:=params{2};
+                !    currentSpeed.v_leax:=params{3};
+                !    currentSpeed.v_reax:=params{4};
+                !    ok := SERVER_OK;
+                !ELSEIF nParams = 2 THEN
+				!	currentSpeed.v_tcp:=params{1};
+				!	currentSpeed.v_ori:=params{2};
+				!	ok := SERVER_OK;
+				!ELSE
+                !    ok:=SERVER_BAD_MSG;
+                !ENDIF
 
             CASE 9: !Set zone data
                 IF nParams = 4 THEN
@@ -507,6 +507,7 @@ PROC main()
             DEFAULT:
                 TPWrite "SERVER: Illegal instruction code" + NumToStr(instructionCode,0);
                 ok := SERVER_BAD_MSG;
+                TPWrite receivedString;
         ENDTEST
 		
         !Compose the acknowledge string to send back to the client
