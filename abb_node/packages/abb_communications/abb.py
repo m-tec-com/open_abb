@@ -201,12 +201,12 @@ class Robot:
         msg += format(zone[2], "+08.4f") + " " #10
         self.send(msg) #33
 
-    def buffer_add(self, pose):
+    def buffer_add(self, pose, speed = 250):
         '''
         Appends single pose to the remote buffer
         Move will execute at current speed (which you can change between buffer_add calls)
         '''
-        msg = "30 " + self.format_pose(pose)
+        msg = "30 " + self.format_pose(pose) + " " + format(speed, "+08.2f")
         self.send(msg, False)
 
     def clear_buffer(self):

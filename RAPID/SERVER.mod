@@ -345,10 +345,18 @@ PROC main()
                                         [params{4},params{5},params{6},params{7}],
                                         [0,0,0,0],
                                         externalAxis];
+                    
+                    speed := params{8};
+                    PERS speeddata newSpeed;
+                    if speed < 1 OR speed > 250 THEN:
+                        newSpeed := [250, 250, 250, 250];
+                    ELSE
+                        newSpeed := [speed, speed, speed, speed];
+
 !                    IF BUFFER_POS < MAX_BUFFER THEN
 !                        BUFFER_POS := BUFFER_POS + 1;
 !                        bufferTargets{BUFFER_POS} := cartesianTarget;
-!                        bufferSpeeds{BUFFER_POS} := currentSpeed;
+!                        bufferSpeeds{BUFFER_POS} := newSpeed;
 !                    ENDIF
                     IF BUFFER_LEFT > 0 THEN                        
                         writePos := writePos+1;
