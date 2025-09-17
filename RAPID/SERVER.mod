@@ -35,7 +35,7 @@ VAR bool moveCompleted; !Set to true after finishing a Move instruction.
 
 !//Buffered move variables
 CONST num MAX_BUFFER := 128;
-PERS bool paused := TRUE;
+PERS bool paused := FALSE;
 PERS num BUFFER_POS;
 PERS num BUFFER_LEFT;
 PERS bool MOVING;
@@ -168,6 +168,9 @@ PROC main()
     VAR robtarget pwobj3;
     VAR wobjdata cwobj;
     VAR num writePos := 1;
+
+    VAR num speed := 250;
+    VAR speeddata newSpeed;
     
     
     !//Motion configuration
@@ -191,7 +194,7 @@ PROC main()
         addString := "";            
 
         !//Wait for a command
-        SocketReceive clientSocket \Str:=receivedString  \ReadNoOfBytes:=67 \Time:=WAIT_MAX;
+        SocketReceive clientSocket \Str:=receivedString  \ReadNoOfBytes:=76 \Time:=WAIT_MAX;
         ParseMsg receivedString;
         
         !//Execution of the command
@@ -340,18 +343,18 @@ PROC main()
                 WHILE BUFFER_LOCKED DO
                     !wait
                 ENDWHILE
-                IF nParams = 7 THEN
+                IF nParams = 8 THEN
                     cartesianTarget :=[[params{1},params{2},params{3}],
                                         [params{4},params{5},params{6},params{7}],
                                         [0,0,0,0],
                                         externalAxis];
                     
                     speed := params{8};
-                    PERS speeddata newSpeed;
-                    if speed < 1 OR speed > 250 THEN:
+                    if speed < 1 OR speed > 250 THEN
                         newSpeed := [250, 250, 250, 250];
                     ELSE
                         newSpeed := [speed, speed, speed, speed];
+                    ENDIF
 
 !                    IF BUFFER_POS < MAX_BUFFER THEN
 !                        BUFFER_POS := BUFFER_POS + 1;
@@ -364,7 +367,7 @@ PROC main()
                             writePos := writePos - MAX_BUFFER;
                         ENDIF
                         bufferTargets{writePos} := cartesianTarget;
-                        bufferSpeeds{writePos} := currentSpeed;
+                        bufferSpeeds{writePos} := newSpeed;
                         BUFFER_LEFT := BUFFER_LEFT - 1;
                     ENDIF
                     !addString := NumToStr(MAX_BUFFER - BUFFER_POS,2);

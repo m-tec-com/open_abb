@@ -257,7 +257,7 @@ class Robot:
         message = msg["message"]
         wait_for_response = msg["wait_for_response"]
 
-        while len(message) < 66:
+        while len(message) < 75:
             message += "*"
         message += "#"
 
