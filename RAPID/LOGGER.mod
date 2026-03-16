@@ -20,7 +20,7 @@ PERS num BUFFER_LEFT;
 PERS bool BUFFER_LOCKED;
 PERS bool MOVING;
 CONST num MAX_BUFFER := 128;
-
+PERS num POINTS_DONE;
 
 !//Logger sampling rate
 !PERS num loggerWaitTime:= 0.01;  !Recommended for real controller
@@ -87,6 +87,7 @@ PROC main()
 !        data := data + NumToStr(position.rot.q4,3) + " ";
         !data := data + NumToStr(bufferLeft, 0) + " ";
         data := data + NumToStr(BUFFER_LEFT, 0) + " ";
+        data := data + NumToStr(POINTS_DONE, 0) + " ";
         
 		IF connected = TRUE THEN
 			SocketSend clientSocket \Str:=data;

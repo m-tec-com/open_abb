@@ -4,6 +4,7 @@ MODULE move
     PERS speeddata bufferSpeeds{MAX_BUFFER};
     PERS num BUFFER_POS;
     PERS num BUFFER_LEFT;
+    PERS num POINTS_DONE;
     PERS tooldata currentTool;    
     PERS wobjdata currentWobj;   
     PERS speeddata currentSpeed;
@@ -12,7 +13,9 @@ MODULE move
     PERS bool MOVING;
     VAR triggdata Movement;
     
-    PERS robtarget target := [[0,0,500],[0,0,-1,0], [0,0,0,0], [ 11, 12.3, 9E9, 9E9, 9E9, 9E9]];
+    PERS robtarget target := [[700,500,10],[1,0,0,0], [0,0,0,0], [ 11, 12.3, 9E+09, 9E+09, 9E+09, 9E+09]];
+    TASK PERS wobjdata wobjTest:=[FALSE,TRUE,"",[[1000,-1000,1000],[0.5,0.5,-0.5,0.5]],[[0,0,0],[1,0,0,0]]];
+    CONST robtarget positionZero:=[[0,0,300],[1,0,0,0],[-1,1,1,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
     
     PROC main()
         BUFFER_LEFT := MAX_BUFFER;
@@ -23,7 +26,8 @@ MODULE move
         MOVING := FALSE;
         BUFFER_LOCKED := FALSE;
         ConfL \Off;
-        SingArea \LockAxis4;
+        !SingArea \LockAxis4;
+        !SingArea \Wrist;
         
         !BUFFER_POS := 0;
         WHILE TRUE DO
@@ -34,6 +38,7 @@ MODULE move
             ENDIF
         ENDWHILE
     ENDPROC
+    
     
     
     PROC movePoint()
@@ -51,6 +56,10 @@ MODULE move
             BUFFER_POS := BUFFER_POS - MAX_BUFFER;
         ENDIF
         BUFFER_LOCKED := FALSE;
+        POINTS_DONE := POINTS_DONE + 1;
+        IF BUFFER_LEFT = MAX_BUFFER THEN
+            POINTS_DONE := 0;
+        ENDIF
         !TriggL bufferTargets{1}, bufferSpeeds{1}, Movement, currentZone, currentTool \WObj:=currentWobj;
         !moveBuffer;
     ENDPROC
