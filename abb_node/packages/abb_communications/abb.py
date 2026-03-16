@@ -104,10 +104,11 @@ class Robot:
                 #self.bufferLeft = int(data[9])
                 self.pose = []
                 self.bufferLeft = int(data[2])
+                pointsDone = int(data[3])
 
-                print(self.pose, self.bufferLeft)
+                print(self.pose, self.bufferLeft, pointsDone)
                 if self.callback != None:
-                    self.callback(self.pose, self.bufferLeft)
+                    self.callback(self.pose, self.bufferLeft, pointsDone)
 
 
     def set_units(self, linear, angular):

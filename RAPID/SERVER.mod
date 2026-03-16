@@ -5,8 +5,8 @@ MODULE SERVER
 !////////////////
 
 !//Robot configuration
-PERS tooldata currentTool := [TRUE,[[0,0,0],[-0.27065,0.65328,-0.2706,0.65328]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
-PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[0,0,0],[1,0,0,0]]];   
+PERS tooldata currentTool := [TRUE,[[-319.5,116.3,100.5],[0.21263,-0.62721,0.32651,-0.67438]],[0.001,[0,0,0.001],[1,0,0,0],0,0,0]];    
+PERS wobjdata currentWobj := [FALSE,TRUE,"",[[0,0,0],[1,0,0,0]],[[1317,-952,125.1],[1,0.006,0.007,-0.016]]];   
 PERS speeddata currentSpeed;
 PERS zonedata currentZone;
 
@@ -39,6 +39,7 @@ PERS bool paused := FALSE;
 PERS num BUFFER_POS;
 PERS num BUFFER_LEFT;
 PERS bool MOVING;
+PERS num POINTS_DONE;
 PERS robtarget bufferTargets{MAX_BUFFER};
 PERS speeddata bufferSpeeds{MAX_BUFFER};
 PERS bool BUFFER_LOCKED;
@@ -168,9 +169,10 @@ PROC main()
     VAR robtarget pwobj3;
     VAR wobjdata cwobj;
     VAR num writePos := 1;
-
-    VAR num speed := 250;
+    VAR num speed := 0;
     VAR speeddata newSpeed;
+    
+    POINTS_DONE := 0;
     
     
     !//Motion configuration
@@ -328,11 +330,13 @@ PROC main()
                         currentZone.pzone_tcp := 0.0;
                         currentZone.pzone_ori := 0.0;
                         currentZone.zone_ori := 0.0;
+                        !currentZone := [false, 0.1, 0.1, 0.1, 0.01, 0.1, 0.01];
                     ELSE
                         currentZone.finep := FALSE;
                         currentZone.pzone_tcp := params{2};
                         currentZone.pzone_ori := params{3};
                         currentZone.zone_ori := params{4};
+                        !currentZone := [false, 0.1, 0.1, 0.1, 0.01, 0.1, 0.01];
                     ENDIF
                     ok := SERVER_OK;
                 ELSE
@@ -348,18 +352,17 @@ PROC main()
                                         [params{4},params{5},params{6},params{7}],
                                         [0,0,0,0],
                                         externalAxis];
-                    
                     speed := params{8};
                     if speed < 1 OR speed > 250 THEN
                         newSpeed := [250, 250, 250, 250];
                     ELSE
-                        newSpeed := [speed, speed, speed, speed];
+                        newSpeed := [speed, speed, speed, speed];                    
                     ENDIF
-
+                                        
 !                    IF BUFFER_POS < MAX_BUFFER THEN
 !                        BUFFER_POS := BUFFER_POS + 1;
 !                        bufferTargets{BUFFER_POS} := cartesianTarget;
-!                        bufferSpeeds{BUFFER_POS} := newSpeed;
+!                        bufferSpeeds{BUFFER_POS} := currentSpeed;
 !                    ENDIF
                     IF BUFFER_LEFT > 0 THEN                        
                         writePos := writePos+1;
@@ -391,6 +394,7 @@ PROC main()
                         BUFFER_POS := 1;
                     ENDIF
                     ok := SERVER_OK;
+                    POINTS_DONE := 0;
                 ELSE
                     ok:=SERVER_BAD_MSG;
                 ENDIF
